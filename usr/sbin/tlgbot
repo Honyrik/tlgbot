@@ -26,24 +26,69 @@ if [ -z "$polling_period" ]; then
 fi
 
 command_not_found="Похоже, на эльфийском. Я не могу прочесть"
-## \_ для экранирования, чтобы Markdown не изменял текст на курсив, полужирный и т.д. 
-command_start="Готов выполнять команды. Вот их список:
-/start - вывод данного сообщения
-/uptime - время работы роутера
-/wan\_uptime - время работы WAN-интерфейса 
-/wan\_ip - белый IP-адрес
-/free - использование оперативной памяти
-/loadavg - средняя загрузка (1 мин., 5 мин., 15 мин.)
-/last - текущие сессии пользователей, вошедших по SSH
-/dhcp\_clients - список клиентов DHCP
-/wifi\_clients - список клиентов сетей WiFi
-/summary - вывод информации команд выше в одном сообщении
-/wakeup - разбудить
-"
+## \_ для экранирования, чтобы Markdown не изменял текст на курсив, полужирный и т.д.
+command_json='
+{
+    "commands": [
+        {
+            "command": "start",
+            "description": "вывод данного сообщения"
+        },
+        {
+            "command": "uptime",
+            "description": "время работы роутера"
+        },
+        {
+            "command": "wan_uptime",
+            "description": "время работы WAN-интерфейса"
+        },
+        {
+            "command": "wan_ip",
+            "description": "белый IP-адрес"
+        },
+        {
+            "command": "free",
+            "description": "использование оперативной памяти"
+        },
+        {
+            "command": "loadavg",
+            "description": "средняя загрузка (1 мин., 5 мин., 15 мин.)"
+        },
+        {
+            "command": "last",
+            "description": "текущие сессии пользователей, вошедших по SSH"
+        },
+        {
+            "command": "dhcp_clients",
+            "description": "список клиентов DHCP"
+        },
+        {
+            "command": "wifi_clients",
+            "description": "список клиентов сетей WiFi"
+        },
+        {
+            "command": "summary",
+            "description": "вывод информации команд выше в одном сообщении"
+        },
+        {
+            "command": "wakeup",
+            "description": "разбудить wake on lan"
+        }
+    ]
+}
+' 
+command_start="Готов выполнять команды. Вот их список: 
+$(jsonfilter -s "$command_json" -e "$.commands[*]" | while read line; do 
+cmd=$(jsonfilter -s "${line}" -e "$.command" | sed -e s/_/\\\\_/)
+description=$(jsonfilter -s "${line}" -e "$.description")
+echo -e "/$cmd - $description"
+done
+)"
 
 sleep 10
 
 ## Сообщение при старте бота
+curl -k -s -X POST -H "Content-Type: application/json" -d "$command_json" $api/setMyCommands &> $telegram_log_file
 curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d chat_id=$chat_id -d parse_mode=Markdown --data-urlencode text="*Бот запущен*" &> $telegram_log_file
 
 ## Клавиатура с функциональными кнопками, может быть возвращена с ответом бота, например, при запуске бота
