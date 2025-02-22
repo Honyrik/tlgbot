@@ -71,7 +71,7 @@ command_json='
             "description": "вывод информации команд выше в одном сообщении"
         },
         {
-            "command": "wakeup",
+            "command": "wol",
             "description": "разбудить wake on lan"
         }
     ]
