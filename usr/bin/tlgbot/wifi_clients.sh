@@ -1,7 +1,7 @@
 #!/bin/sh
-for wifi in wlan0 wlan1
+for wifi in $(iw dev | grep Interface | cut -f 2 -s -d" ")
 do
-	if [ "${wifi}" == "wlan0" ]; then
+	if [[ "${wifi}" =~ ^[A-Za-z]+0.*$ ]]; then
 		echo -en "---${wifi} - 2.4 ГГц---\n"
 	else
 		echo -en "---${wifi} - 5 ГГц---\n"
