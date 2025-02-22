@@ -1,0 +1,18 @@
+#!/bin/sh
+[ "$ACTION" == "add" ] || exit 0
+
+token=$(uci get tlgbot.api.token)
+chat_id=$(uci get tlgbot.api.chat_id)
+api=$(uci get tlgbot.api.url)$token
+known_mac_addr="/etc/known_mac_addr"
+telegram_log_file=/dev/null
+
+if ! /bin/grep -iq "$MACADDR" "$known_mac_addr"; then
+        msg="Добавлен новый клиент
+IP: $IPADDR
+HOSTNAME: $HOSTNAME
+MAC: $MACADDR
+"
+        curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d chat_id=$chat_id -d parse_mode=Markdown --data-urlencode text="$msg" &> $telegram_log_file
+fi
+exit 0
