@@ -1,5 +1,7 @@
 #!/bin/sh
-for wifi in $(iw dev | grep Interface | cut -f 2 -s -d" ")
+. /usr/share/libubox/jshn.sh
+json_init
+result_command="$(for wifi in $(iw dev | grep Interface | cut -f 2 -s -d" ")
 do
 	if [[ "${wifi}" =~ ^[A-Za-z]+0.*$ ]]; then
 		echo -en "---${wifi} - 2.4 ГГц---\n"
@@ -18,4 +20,7 @@ do
 		/usr/bin/tlgbot/functions/get_mac.sh "${lease}"
 		echo -en "\n"
 	done
-done
+done)"
+json_add_string "message" "${result_command}"
+json_close_object
+echo "$(json_dump)"

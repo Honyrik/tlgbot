@@ -11,6 +11,8 @@ api=$(uci get tlgbot.api.url)$token
 scripts="/usr/bin/tlgbot"
 telegram_log_file=/dev/null
 
+. /usr/share/libubox/jshn.sh
+
 if [ -z "$token" ]; then
 	echo "Не указан токен"
 	exit 2
@@ -67,10 +69,6 @@ command_json='
             "description": "список клиентов сетей WiFi"
         },
         {
-            "command": "summary",
-            "description": "вывод информации команд выше в одном сообщении"
-        },
-        {
             "command": "wol",
             "description": "разбудить wake on lan"
         }
@@ -105,8 +103,10 @@ fi
 reply_to_msg () {
 	local msg_id=$1
 	local origin=$2
-	eval local reply="$3"
-	curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d reply_to_message_id=$msg_id -d chat_id=$origin -d parse_mode=Markdown --data-urlencode text="$reply" &> $telegram_log_file
+	local json=$3
+	local reply=$(jsonfilter -s "$json" -e '$.message')
+	local mode=$(jsonfilter -s "$json" -e '$.mode')
+	curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d reply_to_message_id=$msg_id -d chat_id=$origin -d parse_mode=${mode:-Markdown} --data-urlencode text="$reply" &> $telegram_log_file
 }
 
 while [ true ]
@@ -137,22 +137,31 @@ do
 					RETURN_TEXT=""
 					case "$cmd" in
 						("/start")
-							reply_to_msg $msg_id $origin "\${command_start}"
+						    json_init
+							json_add_string "message" "${command_start}"
+							json_close_object
+							reply_to_msg $msg_id $origin "$(json_dump)"
 							;;
 						(*)
-							if [ -f "${scripts}/${cmd}.sh" ] ; then
+							if [ -f "${scripts}${cmd}.sh" ] ; then
 								(echo "Call $cmd [$params]" | logger -t "telegram_bot" -p daemon.info)&
-								RETURN_TEXT=$(${scripts}/${cmd}.sh ${params})
+								RETURN_TEXT=$(${scripts}${cmd}.sh ${params})
 							else
-                                RETURN_TEXT="Команда *${cmd}* не найдена"
+							    json_init
+								json_add_string "message" "Команда *${cmd}* не найдена"
+								json_close_object
+                                RETURN_TEXT="$(json_dump)"
 							fi
 
-                            reply_to_msg $msg_id $origin "\${RETURN_TEXT}"
+                            reply_to_msg $msg_id $origin "${RETURN_TEXT}"
 							;;
                     esac
 
 				else
- 					reply_to_msg $msg_id $origin "\${command_not_found}"
+					json_init
+					json_add_string "message" "${command_not_found}"
+					json_close_object
+ 					reply_to_msg $msg_id $origin "$(json_dump)"
 				fi
 
 			fi

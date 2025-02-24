@@ -29,7 +29,6 @@ The list of scripts (they are bot commands also) is below:
 * **/last** - a list of current users logged in via SSH
 * **/dhcp_clients** - a list of DHCP clients
 * **/wifi_clients** - a list of WiFi networks clients
-* **/summary** - an output of commands above in a single message
 * **/wol** - wake up on lan
 
 There are no commands to manage the device (e.g. to restart a service, to add a rule in firewall, etc.). The examples of such commands can be found in similar projects.
