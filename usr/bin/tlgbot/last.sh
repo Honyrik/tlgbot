@@ -4,8 +4,8 @@ json_init
 logread -e dropbear | grep 'auth succeeded for' | sed 's/^.* dropbear\[//' | sed 's/\]:.*//' | sort -u > /tmp/procids
 
 successfullogins="/tmp/procids"
-
-result_command="$(while IFS= read -r procid
+json_add_string "mode" "HtML"
+result_command="<pre>$(while IFS= read -r procid
 do
 user=$(logread -e "$procid" | grep 'auth succeeded for' | sed "s/^.*succeeded for '//" | sed "s/'.*from.*//")
 ip=$(logread -e "$procid" | grep 'auth succeeded for' | sed 's/^.*from //' | sed 's/\:.*//')
@@ -15,7 +15,7 @@ if [ -z "$endtime" ]; then
 endtime="ещё в системе"
 fi
 echo -e "$user\t$ip\t$starttime"- "$endtime"
-done < "$successfullogins")"
+done < "$successfullogins")</pre>"
 json_add_string "message" "${result_command}"
 json_close_object
 echo "$(json_dump)"
