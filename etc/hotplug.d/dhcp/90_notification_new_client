@@ -15,6 +15,6 @@ if [[ ! -f "$known_file"]] || [[ "0" == "$(grep -c \"$MACADDR\" $known_file)"]];
     MAC: $MACADDR
     "
     curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d chat_id=$chat_id -d parse_mode=Markdown --data-urlencode text="$msg" &> $telegram_log_file
-    echo -ne "$MACADDR" >> $known_file
+    echo -e "$MACADDR" >> $known_file
 fi
 exit 0
