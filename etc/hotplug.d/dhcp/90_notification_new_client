@@ -6,12 +6,15 @@ chat_id=$(uci get tlgbot.api.chat_id)
 api=$(uci get tlgbot.api.url)$token
 
 telegram_log_file=/dev/null
+known_file="/tmp/know_file"
 
-msg="Добавлен новый клиент
-IP: $IPADDR
-HOSTNAME: $HOSTNAME
-MAC: $MACADDR
-"
-curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d chat_id=$chat_id -d parse_mode=Markdown --data-urlencode text="$msg" &> $telegram_log_file
-
+if [[ ! -f "$known_file"]] || [[ "0" == "$(grep -c '$MACADDR' $known_file)"]]; then
+    msg="Добавлен новый клиент
+    IP: $IPADDR
+    HOSTNAME: $HOSTNAME
+    MAC: $MACADDR
+    "
+    curl -k -s -X POST -H "Charset: UTF-8" $api/sendMessage -d chat_id=$chat_id -d parse_mode=Markdown --data-urlencode text="$msg" &> $telegram_log_file
+    echo -ne "$MACADDR" >> $known_file
+fi
 exit 0
